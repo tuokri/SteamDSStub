@@ -1,0 +1,3 @@
+[submodule "SteamKit"]
+	path = SteamKit
+	url = git@github.com:tuokri/SteamKit.git

@@ -7,9 +7,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-
     <ItemGroup>
-      <ProjectReference Include="..\..\SteamKit\SteamKit2\SteamKit2\SteamKit2.csproj" />
+      <ProjectReference Include="..\SteamKit\SteamKit2\SteamKit2\SteamKit2.csproj" />
     </ItemGroup>
 
 </Project>
