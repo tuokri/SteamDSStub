@@ -2,6 +2,7 @@
 
 using System.Net;
 using SteamKit2;
+using SteamKit2.Internal;
 
 Console.WriteLine("Hello, World!");
 
@@ -59,12 +60,29 @@ void SendStatusUpdate()
         AppID = appId,
         ServerFlags = EServerFlags.Active | EServerFlags.Dedicated | EServerFlags.Secure,
         GameDirectory = "RS2",
-        Address = IPAddress.Parse("87.100.217.232"),
+        // Address = IPAddress.Parse(""),  // Not used by Steam.
         Port = 7777,
         QueryPort = 27015,
         Version = "1091",
     };
     server?.SendStatus(details);
+
+    var gsData = new ClientMsgProtobuf<CMsgGameServerData>(EMsg.AMGameServerUpdate);
+    gsData.Body.revision = 17;
+    gsData.Body.query_port = 27015;
+    gsData.Body.game_port = 7777;
+    gsData.Body.server_name = "test server";
+    gsData.Body.app_id = appId;
+    gsData.Body.product = "RS2";
+    gsData.Body.gamedir = "RS2";
+    gsData.Body.map = "VNTE-CuChi";
+    gsData.Body.os = "w";
+    gsData.Body.max_players = 64;
+    gsData.Body.version = "1091";
+    gsData.Body.dedicated = true;
+    gsData.Body.region = "255";
+
+    client.Send(gsData);
 }
 
 void OnConnected(SteamClient.ConnectedCallback callback)
@@ -95,18 +113,14 @@ void OnLoggedOn(SteamUser.LoggedOnCallback callback)
             return;
         }
 
-        Console.WriteLine("unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult);
+        Console.WriteLine("unable to logon to Steam: {0} / {1}", callback.Result,
+            callback.ExtendedResult);
 
         isRunning = false;
         return;
     }
 
     Console.WriteLine("successfully logged on!");
-
-    // at this point, we'd be able to perform actions on Steam
-
-    // for this sample we'll just log off
-    // server?.LogOff();
 
     SendStatusUpdate();
 }
@@ -123,7 +137,14 @@ void OnStatusReply(SteamGameServer.StatusReplyCallback callback)
 
 void OnTicketAuth(SteamGameServer.TicketAuthCallback callback)
 {
-    Console.WriteLine("StatusReplyCallback");
+    Console.WriteLine(
+        $"TicketAuthCallback: GameID={callback.GameID} " +
+        $"SteamID={callback.SteamID} " +
+        $"State={callback.State}" +
+        $"AuthSessionResponse={callback.AuthSessionResponse} " +
+        $"TicketCRC={callback.TicketCRC} " +
+        $"TicketSequence={callback.TicketSequence}"
+    );
 }
 
 internal class DebugLogListener : IDebugListener
