@@ -11,4 +11,8 @@
       <ProjectReference Include="..\NetCoreServer\source\NetCoreServer\NetCoreServer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Tomlyn" Version="0.16.2" />
+    </ItemGroup>
+
 </Project>
