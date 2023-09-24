@@ -11,7 +11,7 @@ def main():
 
     with open(file, "rb") as f:
         cfg = tomllib.load(f)
-    
+
     # TODO: proper config.
     gameport = cfg["GAMEPORT"]
     dest_host = ""
