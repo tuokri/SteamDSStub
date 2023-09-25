@@ -1,0 +1,26 @@
+[server]
+gameport = 7777
+queryport = 27015
+appid = 480
+gamedir = ""
+version = ""
+server_name = ""
+game_name = ""
+map = ""
+protocol = 0
+players = 0
+max_players = 0
+num_bots = 0
+region = "255"
+dedicated = true
+os = "w"
+product = ""
+server_type = ""
+secure = true
+keywords = ""
+steamid = 0
+
+[rules]
+key = "value_pair1"
+key2 = "vaue_pair2"
+free = "form data here"
