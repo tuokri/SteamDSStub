@@ -1,11 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim as build-env
+﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim as build-env
 WORKDIR /App
 
 COPY . ./
 RUN dotnet restore
 RUN dotnet publish -c Release --framework net7.0
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim
+FROM mcr.microsoft.com/dotnet/runtime:7.0-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
