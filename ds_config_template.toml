@@ -1,4 +1,9 @@
+[socat]
+dest_host = "127.0.0.1"
+dest_port = 7778
+
 [server]
+host = ""
 gameport = 7777
 queryport = 27015
 appid = 480
@@ -15,10 +20,11 @@ region = "255"
 dedicated = true
 os = "w"
 product = ""
-server_type = ""
+server_type = "d"
 secure = true
 keywords = ""
 steamid = 0
+password_protected = false
 
 [rules]
 key = "value_pair1"
