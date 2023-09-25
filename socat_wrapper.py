@@ -12,21 +12,25 @@ def main():
     with open(file, "rb") as f:
         cfg = tomllib.load(f)
 
-    # TODO: proper config.
-    gameport = cfg["GAMEPORT"]
-    dest_host = ""
-    dest_gameport = ""
+    socat_cfg = cfg["socat"]
+    gameport = cfg["server"]["gameport"]
+    dest_host = socat_cfg["dest_host"]
+    dest_port = socat_cfg["dest_port"]
 
-    subprocess.check_call([
+    socat_args = [
         "socat",
         "-d",
         "-d",
         "-d",
         "-t1",
         "-T5",
-        f"UDP-LISTEN{gameport},fork,reuseaddr",
-        f"UDP:{dest_host}:{dest_gameport}",
-    ])
+        f"UDP-LISTEN:{gameport},fork,reuseaddr",
+        f"UDP:{dest_host}:{dest_port}",
+    ]
+
+    print(f"running socat with: {socat_args}")
+
+    subprocess.check_call(socat_args)
 
 
 if __name__ == "__main__":
