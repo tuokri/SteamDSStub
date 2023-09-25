@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     procps \
+    python-is-python3 \
     socat \
     tar \
     tmux \
