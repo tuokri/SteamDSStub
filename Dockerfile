@@ -40,6 +40,9 @@ WORKDIR /App
 
 COPY run_servers.sh run_servers.sh
 COPY Procfile Procfile
+COPY ds_config_1.toml ds_config_1.toml
+COPY ds_config_2.toml ds_config_2.toml
+COPY socat_wrapper.py socat_wrapper.py
 
 # Using host network for these.
 # ARG GAMEPORT
