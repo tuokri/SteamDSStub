@@ -483,7 +483,7 @@ _ReSharper.Caches
 **/*.sln.iml
 
 # flyctl launch added from .idea/.idea.SteamDSStub/.idea/.gitignore
-.idea/.idea.SteamDSStub/.idea/**/﻿# Default ignored files
+.idea/.idea.SteamDSStub/.idea/**/
 .idea/.idea.SteamDSStub/.idea/shelf
 .idea/.idea.SteamDSStub/.idea/workspace.xml
 # Rider ignored files
@@ -625,7 +625,7 @@ SteamKit/Resources/NetHook2/**/native-dependencies
 SteamKit/Resources/NetHook2/NetHook2/**/version.cpp
 fly.toml
 
-.idea/**
+.idea/
 
 # Python
 venv/
