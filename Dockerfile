@@ -26,8 +26,6 @@ RUN echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/local.conf
 ARG OVERMIND_VERSION="v2.4.0"
 ARG OVERMIND_URL="https://github.com/DarthSim/overmind/releases/download/${OVERMIND_VERSION}/overmind-${OVERMIND_VERSION}-linux-amd64.gz"
 ARG OVERMIND_SHA256="1f7cac289b550a71bebf4a29139e58831b39003d9831be59eed3e39a9097311c"
-# TODO: checksum not supported by fly.io. Running old version?
-# --checksum=sha256:1f7cac289b550a71bebf4a29139e58831b39003d9831be59eed3e39a9097311c \
 ADD ${OVERMIND_URL} ./
 RUN echo "${OVERMIND_SHA256} ./overmind-${OVERMIND_VERSION}-linux-amd64.gz" \
     | sha256sum --check --status
