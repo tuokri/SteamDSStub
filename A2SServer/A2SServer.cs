@@ -9,11 +9,11 @@ namespace A2SServer;
 public class Info
 {
     public byte Protocol = 0;
-    public string Name = "\0";
+    public string ServerName = "\0";
     public string Map = "\0";
     public string GameDir = "\0";
     public string GameName = "\0";
-    public short AppId = 0;
+    public short AppId = 0; // Unused, use GameId instead.
     public byte Players = 0;
     public byte MaxPlayers = 0;
     public byte NumBots = 0;
@@ -23,7 +23,7 @@ public class Info
     public byte Secure = 0;
     public string Version = "0\0";
 
-    // Extra data.
+    // Extra data, indicated by the EDF flag.
     public ushort Port = 0;
     public long SteamId = 0;
     public string Keywords = "\0";
@@ -53,9 +53,7 @@ public class A2SServer : UdpServer
 
     protected override void OnReceived(EndPoint endpoint, byte[] buffer, long offset, long size)
     {
-        Console.WriteLine(
-            $"OnReceived: {endpoint}: {size}: " +
-            $"{Encoding.ASCII.GetString(buffer, (int)offset, (int)size)}");
+        Console.WriteLine($"OnReceived: {endpoint}: {size}");
 
         // A2S requests should never exceed 29 bytes.
         if (size is < 5 or > 30)
@@ -126,7 +124,7 @@ public class A2SServer : UdpServer
                     Info.Protocol,
                 };
 
-                var bytes = basicInfo.Concat(Encoding.ASCII.GetBytes(Info.Name + '\0'))
+                var bytes = basicInfo.Concat(Encoding.ASCII.GetBytes(Info.ServerName + '\0'))
                     .Concat(Encoding.ASCII.GetBytes(Info.Map + '\0'))
                     .Concat(Encoding.ASCII.GetBytes(Info.GameDir + '\0'))
                     .Concat(Encoding.ASCII.GetBytes(Info.GameName + '\0'))
@@ -230,12 +228,18 @@ public class A2SServer : UdpServer
                     0xff,
                     0xff,
                     0x45,
-                    (byte)Rules.Count,
                 };
 
-                allData = Rules.Aggregate<KeyValuePair<string, string>, IEnumerable<byte>>(data,
-                    (current, kv) => current.Concat(Encoding.ASCII.GetBytes(kv.Key + '\0'))
-                        .Concat(Encoding.ASCII.GetBytes(kv.Value + '\0')));
+                var rulesLen = (short)Rules.Count;
+
+                List<byte> rulesData = new();
+                foreach (var kv in Rules)
+                {
+                    rulesData.AddRange(Encoding.ASCII.GetBytes(kv.Key + '\0'));
+                    rulesData.AddRange(Encoding.ASCII.GetBytes(kv.Value + '\0'));
+                }
+
+                allData = data.Concat(BitConverter.GetBytes(rulesLen)).Concat(rulesData);
             }
 
             sendBuffer = allData.ToArray();

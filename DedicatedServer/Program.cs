@@ -1,10 +1,26 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Net;
+﻿using SteamKit2.Internal;
 using SteamKit2;
-using SteamKit2.Internal;
+using System.Runtime.InteropServices;
+using Tomlyn;
+using Tomlyn.Model;
 
-Console.WriteLine("Hello, World!");
+Console.WriteLine("starting Steam DS");
+
+PosixSignalRegistration.Create(PosixSignal.SIGINT, HandleSignal);
+PosixSignalRegistration.Create(PosixSignal.SIGTERM, HandleSignal);
+
+var fileName = args[0];
+Console.WriteLine($"reading config from '{fileName}'");
+var cfg = Toml.ToModel(File.ReadAllText(fileName));
+var serverTable = (TomlTable)cfg["server"];
+
+var appId = Convert.ToUInt32((long)serverTable["appid"]);
+var gamePort = Convert.ToUInt16((long)serverTable["gameport"]);
+var queryPort = Convert.ToUInt16((long)serverTable["queryport"]);
+var gameDir = (string)serverTable["gamedir"];
+var version = (string)serverTable["version"];
+var serverName = (string)serverTable["server_name"];
+var serverMap = (string)serverTable["map"];
 
 DebugLog.AddListener(new DebugLogListener());
 DebugLog.Enabled = true;
@@ -33,8 +49,6 @@ manager.Subscribe<SteamGameServer.TicketAuthCallback>(OnTicketAuth);
 
 client.Connect();
 
-const uint appId = 418460;
-
 var isRunning = true;
 
 var lastUpdate = DateTime.UtcNow;
@@ -46,10 +60,13 @@ while (isRunning)
     if (DateTime.UtcNow > (lastUpdate + TimeSpan.FromSeconds(60)))
     {
         Console.WriteLine("updating...");
+        Console.WriteLine($"Public IP: {client.PublicIP}");
         SendStatusUpdate();
         lastUpdate = DateTime.UtcNow;
     }
 }
+
+Console.WriteLine("stopping");
 
 return 0;
 
@@ -59,26 +76,26 @@ void SendStatusUpdate()
     {
         AppID = appId,
         ServerFlags = EServerFlags.Active | EServerFlags.Dedicated | EServerFlags.Secure,
-        GameDirectory = "RS2",
+        GameDirectory = gameDir,
         // Address = IPAddress.Parse(""),  // Not used by Steam.
-        Port = 7777,
-        QueryPort = 27015,
-        Version = "1091",
+        Port = gamePort,
+        QueryPort = queryPort,
+        Version = version,
     };
-    server?.SendStatus(details);
+    server.SendStatus(details);
 
     var gsData = new ClientMsgProtobuf<CMsgGameServerData>(EMsg.AMGameServerUpdate);
     gsData.Body.revision = 17;
-    gsData.Body.query_port = 27015;
-    gsData.Body.game_port = 7777;
-    gsData.Body.server_name = "test server";
+    gsData.Body.query_port = queryPort;
+    gsData.Body.game_port = gamePort;
+    gsData.Body.server_name = serverName;
     gsData.Body.app_id = appId;
-    gsData.Body.product = "RS2";
-    gsData.Body.gamedir = "RS2";
-    gsData.Body.map = "VNTE-CuChi";
+    gsData.Body.product = gameDir;
+    gsData.Body.gamedir = gameDir;
+    gsData.Body.map = serverMap;
     gsData.Body.os = "w";
     gsData.Body.max_players = 64;
-    gsData.Body.version = "1091";
+    gsData.Body.version = version;
     gsData.Body.dedicated = true;
     gsData.Body.region = "255";
 
@@ -101,18 +118,6 @@ void OnLoggedOn(SteamUser.LoggedOnCallback callback)
 {
     if (callback.Result != EResult.OK)
     {
-        if (callback.Result == EResult.AccountLogonDenied)
-        {
-            // if we receive AccountLogonDenied or one of it's flavors (AccountLogonDeniedNoMailSent, etc)
-            // then the account we're logging into is SteamGuard protected
-            // see sample 5 for how SteamGuard can be handled
-
-            Console.WriteLine("unable to logon to Steam: This account is SteamGuard protected.");
-
-            isRunning = false;
-            return;
-        }
-
         Console.WriteLine("unable to logon to Steam: {0} / {1}", callback.Result,
             callback.ExtendedResult);
 
@@ -145,6 +150,12 @@ void OnTicketAuth(SteamGameServer.TicketAuthCallback callback)
         $"TicketCRC={callback.TicketCRC} " +
         $"TicketSequence={callback.TicketSequence}"
     );
+}
+
+void HandleSignal(PosixSignalContext context)
+{
+    Console.WriteLine($"got signal: {context.Signal}");
+    isRunning = false;
 }
 
 internal class DebugLogListener : IDebugListener
