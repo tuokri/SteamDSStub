@@ -18,6 +18,7 @@ FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    dos2unix \
     procps \
     python-is-python3 \
     socat \
@@ -49,6 +50,9 @@ COPY Procfile Procfile
 COPY ds_config_1.toml ds_config_1.toml
 COPY ds_config_2.toml ds_config_2.toml
 COPY socat_wrapper.py socat_wrapper.py
+
+RUN dos2unix ds_config_1.toml
+RUN dos2unix ds_config_2.toml
 
 # Can also simply use host network on Linux for these.
 # ARG GAMEPORT1=8888
