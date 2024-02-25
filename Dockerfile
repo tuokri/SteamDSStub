@@ -4,7 +4,14 @@ WORKDIR /App
 
 COPY . ./
 RUN dotnet restore -a $TARGETARCH
-RUN dotnet publish -c Release --framework net8.0 -a $TARGETARCH --no-restore
+RUN dotnet publish A2SServer/A2SServer.csproj \
+    -c Release --framework net8.0 -a $TARGETARCH --no-restore -o publish/A2SServer
+RUN dotnet publish DedicatedServer/DedicatedServer.csproj \
+    -c Release --framework net8.0 -a $TARGETARCH --no-restore -o publish/DedicatedServer
+# RUN dotnet publish SteamKit/SteamKit2/SteamKit2/SteamKit2.csproj \
+#     -c Release --framework net8.0 -a $TARGETARCH --no-restore -o /publish/SteamKit2
+# RUN dotnet publish NetCoreServer/source/NetCoreServer/NetCoreServer.csproj \
+#     -c Release --framework net8.0 -a $TARGETARCH --no-restore -o /publish/NetCoreServer
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim
 
@@ -43,14 +50,19 @@ COPY ds_config_1.toml ds_config_1.toml
 COPY ds_config_2.toml ds_config_2.toml
 COPY socat_wrapper.py socat_wrapper.py
 
-# Using host network for these.
-# ARG GAMEPORT
-# ARG QUERYPORT
-# EXPOSE $GAMEPORT/udp
-# EXPOSE $QUERYPORT/udp
+# Can also simply use host network on Linux for these.
+# ARG GAMEPORT1=8888
+# ARG GAMEPORT2=8999
+# ARG QUERYPORT1=29015
+# ARG QUERYPORT2=37015
+# EXPOSE $GAMEPORT1
+# EXPOSE $GAMEPORT2
+# EXPOSE $QUERYPORT1
+# EXPOSE $QUERYPORT2
 
-COPY --from=build-env /App/SteamKit/SteamKit2/SteamKit2/bin/Release/net8.0/ .
-COPY --from=build-env /App/DedicatedServer/bin/Release/net8.0/ .
-COPY --from=build-env /App/A2SServer/bin/Release/net8.0/ .
+COPY --from=build-env /App/publish/A2SServer .
+COPY --from=build-env /App/publish/DedicatedServer .
+# COPY --from=build-env /App/publish/SteamKit2 .
+# COPY --from=build-env /App/publish/NetCoreServer .
 
 CMD ["bash", "./run_servers.sh"]
