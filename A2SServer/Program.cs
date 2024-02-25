@@ -38,7 +38,7 @@ var rules = rulesTable.ToDictionary(
 
 Console.WriteLine($"starting A2S server on '{host}:{queryPort}'");
 
-var addr = host == ""
+var addr = host is "" or "0.0.0.0"
     ? IPAddress.Any
     : Dns.GetHostAddresses(host, AddressFamily.InterNetwork)[0];
 
