@@ -1,9 +1,10 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim as build-env
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim as build-env
+ARG TARGETARCH
 WORKDIR /App
 
 COPY . ./
-RUN dotnet restore
-RUN dotnet publish -c Release --framework net8.0
+RUN dotnet restore -a $TARGETARCH
+RUN dotnet publish -c Release --framework net8.0 -a $TARGETARCH --no-restore
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim
 
