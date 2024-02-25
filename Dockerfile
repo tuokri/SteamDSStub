@@ -1,11 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim as build-env
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim as build-env
 WORKDIR /App
 
 COPY . ./
 RUN dotnet restore
-RUN dotnet publish -c Release --framework net7.0
+RUN dotnet publish -c Release --framework net8.0
 
-FROM mcr.microsoft.com/dotnet/runtime:7.0-bookworm-slim
+FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -48,8 +48,8 @@ COPY socat_wrapper.py socat_wrapper.py
 # EXPOSE $GAMEPORT/udp
 # EXPOSE $QUERYPORT/udp
 
-COPY --from=build-env /App/SteamKit/SteamKit2/SteamKit2/bin/Release/net7.0/ .
-COPY --from=build-env /App/DedicatedServer/bin/Release/net7.0/ .
-COPY --from=build-env /App/A2SServer/bin/Release/net7.0/ .
+COPY --from=build-env /App/SteamKit/SteamKit2/SteamKit2/bin/Release/net8.0/ .
+COPY --from=build-env /App/DedicatedServer/bin/Release/net8.0/ .
+COPY --from=build-env /App/A2SServer/bin/Release/net8.0/ .
 
 CMD ["bash", "./run_servers.sh"]
