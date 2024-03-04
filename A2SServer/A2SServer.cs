@@ -32,8 +32,9 @@ public class Info
 
 public class A2SServer : UdpServer
 {
-    private readonly byte[] _prefix = { 0xff, 0xff, 0xff, 0xff };
+    private readonly byte[] _prefix = [0xff, 0xff, 0xff, 0xff];
     private const string QueryStr = "Source Engine Query\0";
+    private readonly object netLock = new object();
 
     public Info Info { get; set; } = new();
     public Dictionary<string, string> Rules { get; set; } = new() { ["\0"] = "\0" };
@@ -53,19 +54,24 @@ public class A2SServer : UdpServer
 
     protected override void OnReceived(EndPoint endpoint, byte[] buffer, long offset, long size)
     {
+        // TODO: shit workaround, migrate to SuperSocket.
+        Monitor.Enter(netLock);
+
         Console.WriteLine($"OnReceived: {endpoint}: {size}");
 
         // A2S requests should never exceed 29 bytes.
         if (size is < 5 or > 30)
         {
-            // Console.WriteLine("bad size");
+            Console.WriteLine($"bad size on request from {endpoint}");
+            OnSent(endpoint, 0);
             return;
         }
 
         var prefix = buffer.Take(4);
         if (!prefix.SequenceEqual(_prefix))
         {
-            // Console.WriteLine("bad prefix");
+            Console.WriteLine($"bad prefix on request from {endpoint}");
+            OnSent(endpoint, 0);
             return;
         }
 
@@ -95,7 +101,10 @@ public class A2SServer : UdpServer
         if (ok)
         {
             Console.WriteLine($"responding to 0x{header:X} request from {endpoint}: {sendSize}");
-            SendAsync(endpoint, sendBuffer, 0, sendSize);
+            if (!SendAsync(endpoint, sendBuffer, 0, sendSize))
+            {
+                Console.WriteLine($"failed to respond to 0x{header:x} request from {endpoint}");
+            }
         }
         else
         {
@@ -232,7 +241,7 @@ public class A2SServer : UdpServer
 
                 var rulesLen = (short)Rules.Count;
 
-                List<byte> rulesData = new();
+                List<byte> rulesData = [];
                 foreach (var kv in Rules)
                 {
                     rulesData.AddRange(Encoding.ASCII.GetBytes(kv.Key + '\0'));
@@ -254,16 +263,18 @@ public class A2SServer : UdpServer
 
     protected override void OnSent(EndPoint endpoint, long sent)
     {
+        Monitor.Exit(netLock);
         ReceiveAsync();
     }
 
     protected override void OnError(SocketError error)
     {
+        Monitor.Exit(netLock);
         Console.WriteLine($"A2SServer OnError: {error}");
         ReceiveAsync();
     }
 
-    private IEnumerable<byte> MakeChallengePacket()
+    private byte[] MakeChallengePacket()
     {
         var data = new byte[]
         {
