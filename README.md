@@ -9,5 +9,6 @@ Does not provide any actual game server functionality (gameplay logic).
 - Registers a dummy Steam dedicated server with the Steam master server(s) with server info such as
   A2S data (A2S_INFO, A2S_RULES, A2S_PLAYERS) specified in a TOML file.
 - A2S server built with SuperSocket to respond to A2S queries.
+- Allows forwarding game port traffic to another server.
 
 Currently using my custom fork of [SteamKit2](https://github.com/tuokri/SteamKit).
