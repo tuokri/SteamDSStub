@@ -55,6 +55,48 @@ var rulesTable = (TomlTable)cfg["rules"];
 var rules = rulesTable.ToDictionary(
     kv => kv.Key, kv => (string)kv.Value);
 
+var playersTable = (TomlTable)cfg["players"];
+var playersStrategy = (string)playersTable["strategy"];
+var playersGame = (string)playersTable["game"];
+var playerNames =
+    from name in (TomlArray)playersTable["names"] select (string)name;
+
+var rng = new Random();
+
+var simPlayers = new List<PlayerInfo>();
+foreach (var name in playerNames)
+{
+    simPlayers.Add(new PlayerInfo
+    {
+        Name = name,
+        Score = rng.Next(-50, 250),
+        Duration = RandDouble(ref rng, 0, 60),
+    });
+}
+
+const double timerIntervalSecs = 5000;
+double roundTime = 0;
+var maxRoundTime = RandDouble(ref rng, 1800, 3600);
+var playerUpdateTimer = new System.Timers.Timer(timerIntervalSecs);
+playerUpdateTimer.Elapsed += (sender, eventArgs) =>
+{
+    roundTime += timerIntervalSecs;
+
+    if (roundTime > maxRoundTime)
+    {
+        roundTime = 0;
+        // Reset player scores and play times.
+    }
+};
+playerUpdateTimer.AutoReset = true;
+playerUpdateTimer.Enabled = true;
+
+// Get random match duration.
+// Set game players from pool of names.
+// Set random starting times for players in range.
+// Increment times every x seconds.
+// Adjust player scores semi randomly every x seconds.
+
 Console.WriteLine($"starting A2S server on '{host}:{queryPort}'");
 
 var addr = host is "" or "0.0.0.0"
@@ -106,7 +148,7 @@ var socketHost = SuperSocketHostBuilder
         {
             Constants.A2SInfoRequestHeader => Utils.MakeInfoResponsePacket(ref info),
             Constants.A2SRulesRequestHeader => Utils.MakeRulesResponsePacket(ref rules),
-            Constants.A2SPlayerRequestHeader => Utils.MakePlayerResponsePacket(),
+            Constants.A2SPlayerRequestHeader => Utils.MakePlayerResponsePacket(ref simPlayers),
             _ => throw new ProtocolException($"invalid header: 0x{p.Header:x}")
         };
 
@@ -130,3 +172,8 @@ await socketHost.RunAsync();
 Console.WriteLine("stopping");
 
 return 0;
+
+static double RandDouble(ref Random rng, double min, double max)
+{
+    return rng.NextDouble() * (max - min) + min;
+}

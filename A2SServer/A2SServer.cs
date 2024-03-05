@@ -100,6 +100,13 @@ public class A2SPackageDecoder : IPackageDecoder<A2SRequestPackage>
     }
 }
 
+public class PlayerInfo
+{
+    public string Name = "";
+    public int Score = 0;
+    public double Duration = 0;
+}
+
 public class Info
 {
     public byte Protocol = 0;
@@ -169,7 +176,7 @@ public static class Utils
         return bytes.ToArray();
     }
 
-    public static byte[] MakePlayerResponsePacket()
+    public static byte[] MakePlayerResponsePacket(ref List<PlayerInfo> players)
     {
         var data = new byte[]
         {
