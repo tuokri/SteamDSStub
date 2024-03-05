@@ -1,8 +1,8 @@
 ﻿using SteamKit2.Internal;
 using SteamKit2;
 using System.Runtime.InteropServices;
-using Tomlyn;
 using Tomlyn.Model;
+using Tomlyn;
 
 Console.WriteLine("starting Steam DS");
 
