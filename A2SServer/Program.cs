@@ -1,11 +1,13 @@
-﻿using System.Net.Sockets;
+﻿using A2SServer;
+using Microsoft.Extensions.Hosting;
+using SuperSocket.ProtoBase;
+using SuperSocket;
+using System.Net.Sockets;
 using System.Net;
-using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using Tomlyn.Model;
 using Tomlyn;
 
-PosixSignalRegistration.Create(PosixSignal.SIGINT, HandleSignal);
-PosixSignalRegistration.Create(PosixSignal.SIGTERM, HandleSignal);
 
 var fileName = args[0];
 Console.WriteLine($"reading config from '{fileName}'");
@@ -44,49 +46,70 @@ var addr = host is "" or "0.0.0.0"
 
 Console.WriteLine($"resolved '{host}' to '{addr}'");
 
-var isRunning = true;
-
-var server = new A2SServer.A2SServer(addr, queryPort);
-server.OptionReuseAddress = true;
-server.OptionReceiveBufferLimit = 100;
-server.OptionSendBufferLimit = 3000;
-
-server.Info.Protocol = protocol;
-server.Info.ServerName = serverName;
-server.Info.Map = map;
-server.Info.GameDir = gameDir;
-server.Info.GameName = gameName;
-server.Info.AppId = 0;
-server.Info.Players = players;
-server.Info.MaxPlayers = maxPlayers;
-server.Info.NumBots = numBots;
-server.Info.ServerType = serverType;
-server.Info.OperatingSystem = os;
-server.Info.PasswordProtected = passwordProtected;
-server.Info.Secure = secure;
-server.Info.Version = version;
-server.Info.Port = gamePort;
-server.Info.SteamId = steamId;
-server.Info.Keywords = keywords;
-server.Info.GameId = appId;
-
-server.Rules = rules;
-
-server.Start();
-
-while (isRunning)
+var info = new Info
 {
-    Thread.Sleep(100);
-}
+    Protocol = protocol,
+    ServerName = serverName,
+    Map = map,
+    GameDir = gameDir,
+    GameName = gameName,
+    AppId = 0,
+    Players = players,
+    MaxPlayers = maxPlayers,
+    NumBots = numBots,
+    ServerType = serverType,
+    OperatingSystem = os,
+    PasswordProtected = passwordProtected,
+    Secure = secure,
+    Version = version,
+    Port = gamePort,
+    SteamId = steamId,
+    Keywords = keywords,
+    GameId = appId
+};
+
+var challenge = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
+
+Console.WriteLine($"generated challenge: 0x{challenge:x}");
+
+var socketHost = SuperSocketHostBuilder
+    .Create<A2SRequestPackage, A2SPipelineFilter>()
+    .UseUdp()
+    .UsePackageDecoder<A2SPackageDecoder>()
+    .UsePackageHandler(async (s, p) =>
+    {
+        if (p.Challenge != challenge)
+        {
+            // Send challenge response.
+            await s.SendAsync(Utils.MakeChallengeResponsePacket(challenge));
+            return;
+        }
+
+        var response = p.Header switch
+        {
+            Constants.A2SInfoRequestHeader => Utils.MakeInfoResponsePacket(ref info),
+            Constants.A2SRulesRequestHeader => Utils.MakeRulesResponsePacket(ref rules),
+            Constants.A2SPlayerRequestHeader => Utils.MakePlayerResponsePacket(),
+            _ => throw new ProtocolException($"invalid header: 0x{p.Header:x}")
+        };
+
+        Console.WriteLine($"responding to 0x{p.Header:x} request from {s.Channel.RemoteEndPoint}");
+        await s.SendAsync(response);
+    }).ConfigureSuperSocket(options =>
+    {
+        options.Name = "A2SServer";
+        options.Listeners =
+        [
+            new ListenOptions
+            {
+                Ip = addr.ToString(),
+                Port = queryPort
+            }
+        ];
+    }).Build();
+
+await socketHost.RunAsync();
 
 Console.WriteLine("stopping");
 
-server.Stop();
-
 return 0;
-
-void HandleSignal(PosixSignalContext context)
-{
-    Console.WriteLine($"got signal: {context.Signal}");
-    isRunning = false;
-}

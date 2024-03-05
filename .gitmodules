@@ -1,6 +1,6 @@
 [submodule "SteamKit"]
 	path = SteamKit
 	url = git@github.com:tuokri/SteamKit.git
-[submodule "NetCoreServer"]
-	path = NetCoreServer
-	url = https://github.com/chronoxor/NetCoreServer.git
+[submodule "SuperSocket"]
+	path = SuperSocket
+	url = git@github.com:kerryjiang/SuperSocket.git
