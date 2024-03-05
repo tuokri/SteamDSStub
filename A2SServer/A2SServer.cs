@@ -41,12 +41,6 @@ public class A2SPackageDecoder : IPackageDecoder<A2SRequestPackage>
 
     public A2SRequestPackage Decode(ref ReadOnlySequence<byte> buffer, object context)
     {
-        // A2S requests should never exceed 29 bytes.
-        if (buffer.Length is < 5 or > 30)
-        {
-            throw new ProtocolException($"invalid length: {buffer.Length}");
-        }
-
         var reader = new SequenceReader<byte>(buffer);
         if (!reader.TryReadLittleEndian(out int prefix))
         {
@@ -65,8 +59,8 @@ public class A2SPackageDecoder : IPackageDecoder<A2SRequestPackage>
 
         var validHeader = header switch
         {
-            Constants.A2SInfoRequestHeader => true,
-            Constants.A2SPlayerRequestHeader => CheckInfoHeader(ref reader),
+            Constants.A2SInfoRequestHeader => CheckInfoHeader(ref reader),
+            Constants.A2SPlayerRequestHeader => true,
             Constants.A2SRulesRequestHeader => true,
             _ => false
         };
@@ -75,9 +69,15 @@ public class A2SPackageDecoder : IPackageDecoder<A2SRequestPackage>
             throw new ProtocolException($"invalid header: 0x{header:x}");
         }
 
-        if (!reader.TryReadLittleEndian(out int challenge))
+        // Challenge is not always included in the end of the request.
+        // If the request ends here, assume challenge is -1.
+        var challenge = -1;
+        if (!reader.End && !reader.TryReadLittleEndian(out challenge))
         {
-            throw new ProtocolException("failed to read challenge");
+            throw new ProtocolException(
+                $"failed to read challenge, " +
+                $"length: {reader.Length}, consumed: {reader.Consumed}, " +
+                $"remaining: {reader.Remaining}");
         }
 
         package.Challenge = challenge;
@@ -222,6 +222,12 @@ public class A2SPipelineFilter : PipelineFilterBase<A2SRequestPackage>
 {
     public override A2SRequestPackage Filter(ref SequenceReader<byte> reader)
     {
+        // A2S requests should never exceed 29 bytes.
+        if (reader.Length is < 5 or > 30)
+        {
+            return null;
+        }
+
         var pack = reader.Sequence;
         try
         {
