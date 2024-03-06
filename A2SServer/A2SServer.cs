@@ -104,7 +104,7 @@ public class PlayerInfo
 {
     public string Name = "";
     public int Score = 0;
-    public double Duration = 0;
+    public float Duration = 0;
 }
 
 public class Info
@@ -185,10 +185,19 @@ public static class Utils
             0xff,
             0xff,
             Constants.A2SPlayerResponseHeader,
-            0x00,
+            (byte)players.Count,
         };
 
-        return data;
+        List<byte> playerData = [];
+        foreach (var player in players)
+        {
+            playerData.Add(0); // Index seems to always be 0?
+            playerData.AddRange(Encoding.ASCII.GetBytes(player.Name + '\0'));
+            playerData.AddRange(BitConverter.GetBytes(player.Score));
+            playerData.AddRange(BitConverter.GetBytes(player.Duration));
+        }
+
+        return data.Concat(playerData).ToArray();
     }
 
     public static byte[] MakeRulesResponsePacket(ref Dictionary<string, string> rules)
@@ -246,7 +255,7 @@ public class A2SPipelineFilter : PipelineFilterBase<A2SRequestPackage>
         // A2S requests should never exceed 29 bytes.
         if (reader.Length is < 5 or > 30)
         {
-            return null;
+            return null!;
         }
 
         var pack = reader.Sequence;

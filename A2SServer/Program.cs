@@ -56,36 +56,68 @@ var rules = rulesTable.ToDictionary(
     kv => kv.Key, kv => (string)kv.Value);
 
 var playersTable = (TomlTable)cfg["players"];
-var playersStrategy = (string)playersTable["strategy"];
-var playersGame = (string)playersTable["game"];
+var playersStrategy = (string)playersTable["strategy"]; // TODO
+var playersGame = (string)playersTable["game"]; // TODO
 var playerNames =
-    from name in (TomlArray)playersTable["names"] select (string)name;
+    (from name in (TomlArray)playersTable["names"] select (string)name).ToList();
 
 var rng = new Random();
+const int startScoreMin = -50;
+const int startScoreMax = 250;
+const float startDurationMinSeconds = 0;
+const float startDurationMaxSeconds = 60;
 
 var simPlayers = new List<PlayerInfo>();
-foreach (var name in playerNames)
+var rngPlayerNames = PlayerSimulation.RandomPlayerNames(players, playerNames);
+foreach (var name in rngPlayerNames)
 {
     simPlayers.Add(new PlayerInfo
     {
         Name = name,
-        Score = rng.Next(-50, 250),
-        Duration = RandDouble(ref rng, 0, 60),
+        Score = rng.Next(startScoreMin, startScoreMax),
+        Duration = RandFloat(ref rng, startDurationMinSeconds, startDurationMaxSeconds),
     });
 }
 
-const double timerIntervalSecs = 5000;
-double roundTime = 0;
-var maxRoundTime = RandDouble(ref rng, 1800, 3600);
-var playerUpdateTimer = new System.Timers.Timer(timerIntervalSecs);
-playerUpdateTimer.Elapsed += (sender, eventArgs) =>
+var scoreDeltas = new WeightedRandomBag<int>(
+[
+    new Tuple<int, float>(-5, 0.1f),
+    new Tuple<int, float>(0, 0.2f),
+    new Tuple<int, float>(2, 0.2f),
+    new Tuple<int, float>(5, 0.5f),
+    new Tuple<int, float>(10, 0.2f),
+    new Tuple<int, float>(15, 0.1f),
+]);
+const float timerIntervalSecs = 5;
+float roundTime = 0;
+var maxRoundTime = RandFloat(ref rng, 1800, 3600);
+Console.WriteLine($"using maxRoundTime: {maxRoundTime}");
+var playerUpdateTimer =
+    new System.Timers.Timer(TimeSpan.FromSeconds(timerIntervalSecs).TotalMilliseconds);
+playerUpdateTimer.Elapsed += (_, _) =>
 {
     roundTime += timerIntervalSecs;
 
     if (roundTime > maxRoundTime)
     {
+        Console.WriteLine("resetting player simulation round");
+
         roundTime = 0;
         // Reset player scores and play times.
+        for (var i = 0; i < simPlayers.Count; ++i)
+        {
+            simPlayers[i].Score = rng.Next(startScoreMin, startScoreMax);
+            simPlayers[i].Duration =
+                RandFloat(ref rng, startDurationMinSeconds, startDurationMaxSeconds);
+        }
+
+        return;
+    }
+
+    for (var i = 0; i < simPlayers.Count; ++i)
+    {
+        simPlayers[i].Score += scoreDeltas.GetRandom();
+        simPlayers[i].Duration += timerIntervalSecs;
     }
 };
 playerUpdateTimer.AutoReset = true;
@@ -152,7 +184,8 @@ var socketHost = SuperSocketHostBuilder
             _ => throw new ProtocolException($"invalid header: 0x{p.Header:x}")
         };
 
-        Console.WriteLine($"responding to 0x{p.Header:x} request from {s.Channel.RemoteEndPoint}");
+        Console.WriteLine($"responding to 0x{p.Header:x} " +
+                          $"request from {s.Channel.RemoteEndPoint} {response.Length}");
         await s.SendAsync(response);
     }).ConfigureSuperSocket(options =>
     {
@@ -173,7 +206,7 @@ Console.WriteLine("stopping");
 
 return 0;
 
-static double RandDouble(ref Random rng, double min, double max)
+static float RandFloat(ref Random rng, float min, float max)
 {
-    return rng.NextDouble() * (max - min) + min;
+    return (float)rng.NextDouble() * (max - min) + min;
 }

@@ -32,10 +32,8 @@ key2 = "vaue_pair2"
 free = "form data here"
 
 [players]
-# TODO: player advertising strategies.
-#   - Increment score and time played to mimic actual gameplay.
-strategy = "dynamic"  # One of "dynamic", "static".
-game = "generic"  # "Generic" or "rs2".
+strategy = "Dynamic"  # One of "Dynamic", "Static".
+game = "Generic"  # "Generic" or "RisingStorm2".
 names = [
     "foo",
     "bar",
