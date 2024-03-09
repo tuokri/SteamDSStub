@@ -32,6 +32,10 @@ public static class Constants
     public const byte A2SInfoResponseHeader = 0x49;
     public const byte A2SPlayerResponseHeader = 0x44;
     public const byte A2SRulesResponseHeader = 0x45;
+    public const byte EdfPort = 0x80;
+    public const byte EdfSteamId = 0x10;
+    public const byte EdfKeywords = 0x20;
+    public const byte EdfGameId = 0x01;
 }
 
 public class A2SRequestPackage
@@ -134,7 +138,7 @@ public class Info
 // TODO: better name?
 public static class Utils
 {
-    public static byte[] MakeInfoResponsePacket(ref Info info)
+    public static byte[] MakeInfoResponsePacket(Info info)
     {
         var basicInfo = new byte[]
         {
@@ -146,7 +150,8 @@ public static class Utils
             info.Protocol,
         };
 
-        var bytes = basicInfo.Concat(Encoding.ASCII.GetBytes(info.ServerName + '\0'))
+        var bytes = basicInfo
+            .Concat(Encoding.ASCII.GetBytes(info.ServerName + '\0'))
             .Concat(Encoding.ASCII.GetBytes(info.Map + '\0'))
             .Concat(Encoding.ASCII.GetBytes(info.GameDir + '\0'))
             .Concat(Encoding.ASCII.GetBytes(info.GameName + '\0'))
@@ -165,7 +170,8 @@ public static class Utils
 
         bytes = bytes.Concat(moreInfo).Concat(Encoding.ASCII.GetBytes(info.Version + '\0'));
 
-        const byte edf = 0x80 | 0x10 | 0x20 | 0x01;
+        const byte edf = Constants.EdfPort | Constants.EdfSteamId | Constants.EdfKeywords |
+                         Constants.EdfGameId;
         bytes = bytes.Concat(new[] { edf });
 
         bytes = bytes.Concat(BitConverter.GetBytes(info.Port))
@@ -176,7 +182,7 @@ public static class Utils
         return bytes.ToArray();
     }
 
-    public static byte[] MakePlayerResponsePacket(ref List<PlayerInfo> players)
+    public static byte[] MakePlayerResponsePacket(List<PlayerInfo> players)
     {
         var data = new byte[]
         {
@@ -200,7 +206,7 @@ public static class Utils
         return data.Concat(playerData).ToArray();
     }
 
-    public static byte[] MakeRulesResponsePacket(ref Dictionary<string, string> rules)
+    public static byte[] MakeRulesResponsePacket(Dictionary<string, string> rules)
     {
         var data = new byte[]
         {
