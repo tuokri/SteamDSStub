@@ -39,13 +39,14 @@ var version = (string)serverTable["version"];
 var serverName = (string)serverTable["server_name"];
 var serverMap = (string)serverTable["map"];
 
-DebugLog.AddListener(new DebugLogListener());
-DebugLog.Enabled = true;
-
 var client = new SteamClient();
 var manager = new CallbackManager(client);
 
+#if DEBUG
+DebugLog.AddListener(new DebugLogListener());
+DebugLog.Enabled = true;
 client.DebugNetworkListener = new NetHookNetworkListener();
+#endif
 
 var server = client.GetHandler<SteamGameServer>();
 
