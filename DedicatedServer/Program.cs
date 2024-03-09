@@ -77,7 +77,7 @@ while (isRunning)
 
     if (DateTime.UtcNow > (lastUpdate + TimeSpan.FromSeconds(60)))
     {
-        Console.WriteLine("updating...");
+        Console.WriteLine("updating status...");
         Console.WriteLine($"Public IP: {client.PublicIP}");
         SendStatusUpdate();
         lastUpdate = DateTime.UtcNow;
@@ -128,7 +128,7 @@ void OnConnected(SteamClient.ConnectedCallback callback)
 
 void OnDisconnected(SteamClient.DisconnectedCallback callback)
 {
-    Console.WriteLine("disconnected from Steam: {0}", callback.UserInitiated);
+    Console.WriteLine($"disconnected from Steam: {callback.UserInitiated}");
     isRunning = false;
 }
 
@@ -136,8 +136,8 @@ void OnLoggedOn(SteamUser.LoggedOnCallback callback)
 {
     if (callback.Result != EResult.OK)
     {
-        Console.WriteLine("unable to logon to Steam: {0} / {1}", callback.Result,
-            callback.ExtendedResult);
+        Console.WriteLine(
+            $"unable to logon to Steam: {callback.Result} / {callback.ExtendedResult}");
 
         isRunning = false;
         return;
@@ -150,12 +150,12 @@ void OnLoggedOn(SteamUser.LoggedOnCallback callback)
 
 void OnLoggedOff(SteamUser.LoggedOffCallback callback)
 {
-    Console.WriteLine("logged off of Steam: {0}", callback.Result);
+    Console.WriteLine($"logged off of Steam: {callback.Result}");
 }
 
 void OnStatusReply(SteamGameServer.StatusReplyCallback callback)
 {
-    Console.WriteLine("StatusReplyCallback: IsSecure={0}", callback.IsSecure);
+    Console.WriteLine($"StatusReplyCallback: IsSecure={callback.IsSecure}");
 }
 
 void OnTicketAuth(SteamGameServer.TicketAuthCallback callback)
@@ -180,6 +180,6 @@ internal class DebugLogListener : IDebugListener
 {
     public void WriteLine(string category, string msg)
     {
-        Console.WriteLine("DebugLog: {0}: {1}", category, msg);
+        Console.WriteLine($"DebugLog: {category}: {msg}");
     }
 }
