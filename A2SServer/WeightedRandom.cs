@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-class WeightedRandomBag<T>
+public class WeightedRandomBag<T>
 {
     private struct Entry
     {
