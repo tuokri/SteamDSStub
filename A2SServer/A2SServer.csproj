@@ -12,11 +12,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SuperSocket\src\SuperSocket.Channel\SuperSocket.Channel.csproj" />
       <ProjectReference Include="..\SuperSocket\src\SuperSocket.Primitives\SuperSocket.Primitives.csproj" />
       <ProjectReference Include="..\SuperSocket\src\SuperSocket.ProtoBase\SuperSocket.ProtoBase.csproj" />
       <ProjectReference Include="..\SuperSocket\src\SuperSocket.Server\SuperSocket.Server.csproj" />
-      <ProjectReference Include="..\SuperSocket\src\SuperSocket.SessionContainer\SuperSocket.SessionContainer.csproj" />
       <ProjectReference Include="..\SuperSocket\src\SuperSocket.Udp\SuperSocket.Udp.csproj" />
     </ItemGroup>
 

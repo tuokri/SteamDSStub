@@ -18,7 +18,9 @@
 using A2SServer;
 using Microsoft.Extensions.Hosting;
 using SuperSocket.ProtoBase;
-using SuperSocket;
+using SuperSocket.Server.Abstractions;
+using SuperSocket.Server.Host;
+using SuperSocket.Server;
 using System.Net.Sockets;
 using System.Net;
 using System.Security.Cryptography;
@@ -61,27 +63,17 @@ var playersGame = (string)playersTable["game"]; // TODO
 var playerNames =
     (from name in (TomlArray)playersTable["names"] select (string)name).ToList();
 
-var rng = new Random();
 const int startScoreMin = -50;
 const int startScoreMax = 250;
 const float startDurationMinSeconds = 0;
 const float startDurationMaxSeconds = 60;
 
 var simPlayers = new List<PlayerInfo>();
-var rngPlayerNames = PlayerSimulation.RandomPlayerNames(players, playerNames);
-foreach (var name in rngPlayerNames)
-{
-    simPlayers.Add(new PlayerInfo
-    {
-        Name = name,
-        Score = rng.Next(startScoreMin, startScoreMax),
-        Duration = RandFloat(ref rng, startDurationMinSeconds, startDurationMaxSeconds),
-    });
-}
 
 var scoreDeltas = new WeightedRandomBag<int>(
 [
     new Tuple<int, float>(-5, 0.1f),
+    new Tuple<int, float>(-2, 0.1f),
     new Tuple<int, float>(0, 0.2f),
     new Tuple<int, float>(2, 0.2f),
     new Tuple<int, float>(5, 0.5f),
@@ -90,6 +82,7 @@ var scoreDeltas = new WeightedRandomBag<int>(
 ]);
 const float timerIntervalSecs = 5;
 float roundTime = 0;
+var rng = new Random();
 var maxRoundTime = RandFloat(ref rng, 1800, 3600);
 Console.WriteLine($"using maxRoundTime: {maxRoundTime}");
 var playerUpdateTimer =
@@ -160,8 +153,16 @@ var info = new Info
 };
 
 var challenge = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
-
 Console.WriteLine($"generated challenge: 0x{challenge:x}");
+
+var challengeUpdateTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
+challengeUpdateTimer.Elapsed += (_, _) =>
+{
+    challenge = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
+    Console.WriteLine($"updated challenge: 0x{challenge:x}");
+};
+challengeUpdateTimer.AutoReset = true;
+challengeUpdateTimer.Enabled = true;
 
 var socketHost = SuperSocketHostBuilder
     .Create<A2SRequestPackage, A2SPipelineFilter>()
@@ -171,21 +172,20 @@ var socketHost = SuperSocketHostBuilder
     {
         if (p.Challenge != challenge)
         {
-            // Send challenge response.
             await s.SendAsync(Utils.MakeChallengeResponsePacket(challenge));
             return;
         }
 
         var response = p.Header switch
         {
-            Constants.A2SInfoRequestHeader => Utils.MakeInfoResponsePacket(ref info),
-            Constants.A2SRulesRequestHeader => Utils.MakeRulesResponsePacket(ref rules),
-            Constants.A2SPlayerRequestHeader => Utils.MakePlayerResponsePacket(ref simPlayers),
+            Constants.A2SInfoRequestHeader => Utils.MakeInfoResponsePacket(info),
+            Constants.A2SRulesRequestHeader => Utils.MakeRulesResponsePacket(rules),
+            Constants.A2SPlayerRequestHeader => Utils.MakePlayerResponsePacket(simPlayers),
             _ => throw new ProtocolException($"invalid header: 0x{p.Header:x}")
         };
 
         Console.WriteLine($"responding to 0x{p.Header:x} " +
-                          $"request from {s.Channel.RemoteEndPoint} {response.Length}");
+                          $"request from {s.Connection.RemoteEndPoint} {response.Length}");
         await s.SendAsync(response);
     }).ConfigureSuperSocket(options =>
     {
