@@ -30,7 +30,7 @@ RUN echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/local.conf
 
 ARG OVERMIND_VERSION="v2.5.1"
 ARG OVERMIND_URL="https://github.com/DarthSim/overmind/releases/download/${OVERMIND_VERSION}/overmind-${OVERMIND_VERSION}-linux-amd64.gz"
-ARG OVERMIND_SHA256="1f7cac289b550a71bebf4a29139e58831b39003d9831be59eed3e39a9097311c"
+ARG OVERMIND_SHA256="a17159b8e97d13f3679a4e8fbc9d4747f82d5af9f6d32597b72821378b5d0b6f"
 ADD ${OVERMIND_URL} ./
 RUN echo "${OVERMIND_SHA256} ./overmind-${OVERMIND_VERSION}-linux-amd64.gz" \
     | sha256sum --check --status
@@ -50,15 +50,10 @@ COPY socat_wrapper.py socat_wrapper.py
 RUN dos2unix ds_config_1.toml
 RUN dos2unix ds_config_2.toml
 
-# Can also simply use host network on Linux for these.
-# ARG GAMEPORT1=8888
-# ARG GAMEPORT2=8999
-# ARG QUERYPORT1=29015
-# ARG QUERYPORT2=37015
-# EXPOSE $GAMEPORT1
-# EXPOSE $GAMEPORT2
-# EXPOSE $QUERYPORT1
-# EXPOSE $QUERYPORT2
+# TODO:
+# Instead of hard-coding destination server in a config file,
+# have a master "orchestrator" that sets up all destinations
+# for multiple servers to "legit" servers.
 
 COPY --from=build-env /App/publish/A2SServer .
 COPY --from=build-env /App/publish/DedicatedServer .
