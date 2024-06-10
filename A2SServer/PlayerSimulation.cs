@@ -15,6 +15,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Timer = System.Timers.Timer;
+
 namespace A2SServer;
 
 public class InfoUpdatedEventArgs(Info info) : EventArgs
@@ -65,7 +67,7 @@ public class PlayerSimulation
     private byte _numPlayers;
     private WeightedRandomBag<int> _scoreDeltas;
     private TimeSpan _playerUpdateInterval;
-    private System.Timers.Timer _playerUpdateTimer;
+    private Timer _playerUpdateTimer;
     private float _roundTime;
     private float _maxRoundTime;
     private Info _info;

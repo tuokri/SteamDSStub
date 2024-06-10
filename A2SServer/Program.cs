@@ -15,18 +15,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 using A2SServer;
 using Microsoft.Extensions.Hosting;
 using SuperSocket.ProtoBase;
+using SuperSocket.Server;
 using SuperSocket.Server.Abstractions;
 using SuperSocket.Server.Host;
-using SuperSocket.Server;
-using System.Net.Sockets;
-using System.Net;
-using System.Security.Cryptography;
-using Tomlyn.Model;
 using Tomlyn;
-
+using Tomlyn.Model;
+using Timer = System.Timers.Timer;
 
 var fileName = args[0];
 Console.WriteLine($"reading config from '{fileName}'");
@@ -86,7 +86,7 @@ var rng = new Random();
 var maxRoundTime = RandFloat(ref rng, 1800, 3600);
 Console.WriteLine($"using maxRoundTime: {maxRoundTime}");
 var playerUpdateTimer =
-    new System.Timers.Timer(TimeSpan.FromSeconds(timerIntervalSecs).TotalMilliseconds);
+    new Timer(TimeSpan.FromSeconds(timerIntervalSecs).TotalMilliseconds);
 playerUpdateTimer.Elapsed += (_, _) =>
 {
     roundTime += timerIntervalSecs;
@@ -155,7 +155,7 @@ var info = new Info
 var challenge = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
 Console.WriteLine($"generated challenge: 0x{challenge:x}");
 
-var challengeUpdateTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
+var challengeUpdateTimer = new Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
 challengeUpdateTimer.Elapsed += (_, _) =>
 {
     challenge = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);

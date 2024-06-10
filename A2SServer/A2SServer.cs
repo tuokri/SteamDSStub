@@ -15,9 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using SuperSocket.ProtoBase;
 using System.Buffers;
 using System.Text;
+using SuperSocket.ProtoBase;
 
 namespace A2SServer;
 

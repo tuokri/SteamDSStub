@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using SteamKit2.Internal;
-using SteamKit2;
 using System.Runtime.InteropServices;
-using Tomlyn.Model;
+using SteamKit2;
+using SteamKit2.Internal;
 using Tomlyn;
+using Tomlyn.Model;
 
 Console.WriteLine("starting Steam DS");
 
