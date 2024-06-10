@@ -8,10 +8,6 @@ RUN dotnet publish A2SServer/A2SServer.csproj \
     -c Release --framework net8.0 -a $TARGETARCH --no-restore -o publish/A2SServer
 RUN dotnet publish DedicatedServer/DedicatedServer.csproj \
     -c Release --framework net8.0 -a $TARGETARCH --no-restore -o publish/DedicatedServer
-# RUN dotnet publish SteamKit/SteamKit2/SteamKit2/SteamKit2.csproj \
-#     -c Release --framework net8.0 -a $TARGETARCH --no-restore -o /publish/SteamKit2
-# RUN dotnet publish NetCoreServer/source/NetCoreServer/NetCoreServer.csproj \
-#     -c Release --framework net8.0 -a $TARGETARCH --no-restore -o /publish/NetCoreServer
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0-bookworm-slim
 
@@ -32,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ADD network.conf /etc/sysctl.d/network.conf
 RUN echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/local.conf
 
-ARG OVERMIND_VERSION="v2.4.0"
+ARG OVERMIND_VERSION="v2.5.1"
 ARG OVERMIND_URL="https://github.com/DarthSim/overmind/releases/download/${OVERMIND_VERSION}/overmind-${OVERMIND_VERSION}-linux-amd64.gz"
 ARG OVERMIND_SHA256="1f7cac289b550a71bebf4a29139e58831b39003d9831be59eed3e39a9097311c"
 ADD ${OVERMIND_URL} ./
@@ -66,7 +62,5 @@ RUN dos2unix ds_config_2.toml
 
 COPY --from=build-env /App/publish/A2SServer .
 COPY --from=build-env /App/publish/DedicatedServer .
-# COPY --from=build-env /App/publish/SteamKit2 .
-# COPY --from=build-env /App/publish/NetCoreServer .
 
 CMD ["bash", "./run_servers.sh"]
