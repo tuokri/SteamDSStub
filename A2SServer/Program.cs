@@ -97,6 +97,7 @@ playerUpdateTimer.Elapsed += (_, _) =>
 
         roundTime = 0;
         // Reset player scores and play times.
+        // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < simPlayers.Count; ++i)
         {
             simPlayers[i].Score = rng.Next(startScoreMin, startScoreMax);
@@ -107,6 +108,7 @@ playerUpdateTimer.Elapsed += (_, _) =>
         return;
     }
 
+    // ReSharper disable once ForCanBeConvertedToForeach
     for (var i = 0; i < simPlayers.Count; ++i)
     {
         simPlayers[i].Score += scoreDeltas.GetRandom();
