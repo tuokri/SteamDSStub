@@ -78,6 +78,29 @@ public class PlayerSimulation
     private RulesUpdatedEventHandler? _onRulesUpdated;
     private PlayersUpdatedEventHandler? _onPlayersUpdated;
 
+    // TODO: having a constructor is cumbersome?
+    // public PlayerSimulation(int startScoreMin, int startScoreMax, float startDurationMinSeconds, float startDurationMaxSeconds, Random rng, List<string> playerNames, byte numPlayers, WeightedRandomBag<int> scoreDeltas, TimeSpan playerUpdateInterval, Timer playerUpdateTimer, float roundTime, float maxRoundTime, Info info, Dictionary<string, string> rules, List<PlayerInfo> simPlayers, InfoUpdatedEventHandler? onInfoUpdated, RulesUpdatedEventHandler? onRulesUpdated, PlayersUpdatedEventHandler? onPlayersUpdated)
+    // {
+    //     _startScoreMin = startScoreMin;
+    //     _startScoreMax = startScoreMax;
+    //     _startDurationMinSeconds = startDurationMinSeconds;
+    //     _startDurationMaxSeconds = startDurationMaxSeconds;
+    //     _rng = rng;
+    //     _playerNames = playerNames;
+    //     _numPlayers = numPlayers;
+    //     _scoreDeltas = scoreDeltas;
+    //     _playerUpdateInterval = playerUpdateInterval;
+    //     _playerUpdateTimer = playerUpdateTimer;
+    //     _roundTime = roundTime;
+    //     _maxRoundTime = maxRoundTime;
+    //     _info = info;
+    //     _rules = rules;
+    //     _simPlayers = simPlayers;
+    //     _onInfoUpdated = onInfoUpdated;
+    //     _onRulesUpdated = onRulesUpdated;
+    //     _onPlayersUpdated = onPlayersUpdated;
+    // }
+
     public event InfoUpdatedEventHandler InfoUpdated
     {
         add => _onInfoUpdated += value;
