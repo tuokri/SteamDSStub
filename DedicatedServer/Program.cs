@@ -117,6 +117,17 @@ void SendStatusUpdate()
     gsData.Body.dedicated = true;
     gsData.Body.region = "255";
 
+    const int tempPlayerCount = 1;
+    for (var i = 0; i < tempPlayerCount; ++i)
+    {
+        var player = new CMsgGameServerData.Player
+        {
+            // steam_id = 0x110000103a3105d
+        };
+        player.Resetsteam_id();
+        gsData.Body.players.Add(player);
+    }
+
     client.Send(gsData);
 }
 
