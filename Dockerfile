@@ -1,4 +1,4 @@
-﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim as build-env
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build-env
 ARG TARGETARCH
 WORKDIR /App
 
